@@ -1,0 +1,661 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Timrpalmer/sfguide-data-engineering-with-notebooks/blob/main/POKERAG\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "NtVOlmDSHmh4"
+      },
+      "source": [
+        "##### Copyright 2025 Google LLC."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": null,
+      "metadata": {
+        "id": "9r9Ggw012g9c"
+      },
+      "outputs": [],
+      "source": [
+        "# @title Licensed under the Apache License, Version 2.0 (the \"License\");\n",
+        "#\n",
+        "# Licensed under the Apache License, Version 2.0 (the \"License\");\n",
+        "# you may not use this file except in compliance with the License.\n",
+        "# You may obtain a copy of the License at\n",
+        "#\n",
+        "#     https://www.apache.org/licenses/LICENSE-2.0\n",
+        "#\n",
+        "# Unless required by applicable law or agreed to in writing, software\n",
+        "# distributed under the License is distributed on an \"AS IS\" BASIS,\n",
+        "# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n",
+        "# See the License for the specific language governing permissions and\n",
+        "# limitations under the License."
+      ]
+    },
+    {
+      "cell_type": "code",
+      "source": [],
+      "metadata": {
+        "id": "LnSES0d9JjPG"
+      },
+      "execution_count": null,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "# New Section"
+      ],
+      "metadata": {
+        "id": "aOFr1ZIvJl4W"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "POKEMON PERSONA RAG AGENT - need a better name for this project"
+      ],
+      "metadata": {
+        "id": "CjwGL3XVJss2"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Basic setup command to install required Python packages"
+      ],
+      "metadata": {
+        "id": "QLwN3pO7KLe1"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "!pip install requests beautifulsoup4 pandas google-generativeai google-cloud-aiplatform google-cloud-storage gcsfs"
+      ],
+      "metadata": {
+        "id": "jTzUWjzDJ4t9",
+        "outputId": "d6d8cff9-794b-4ea1-f602-f2afcd4f3a85",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        }
+      },
+      "execution_count": 20,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Requirement already satisfied: requests in /usr/local/lib/python3.11/dist-packages (2.32.3)\n",
+            "Requirement already satisfied: beautifulsoup4 in /usr/local/lib/python3.11/dist-packages (4.13.3)\n",
+            "Requirement already satisfied: pandas in /usr/local/lib/python3.11/dist-packages (2.2.2)\n",
+            "Requirement already satisfied: google-generativeai in /usr/local/lib/python3.11/dist-packages (0.8.4)\n",
+            "Requirement already satisfied: google-cloud-aiplatform in /usr/local/lib/python3.11/dist-packages (1.87.0)\n",
+            "Requirement already satisfied: google-cloud-storage in /usr/local/lib/python3.11/dist-packages (2.19.0)\n",
+            "Requirement already satisfied: gcsfs in /usr/local/lib/python3.11/dist-packages (2025.3.2)\n",
+            "Requirement already satisfied: charset-normalizer<4,>=2 in /usr/local/lib/python3.11/dist-packages (from requests) (3.4.1)\n",
+            "Requirement already satisfied: idna<4,>=2.5 in /usr/local/lib/python3.11/dist-packages (from requests) (3.10)\n",
+            "Requirement already satisfied: urllib3<3,>=1.21.1 in /usr/local/lib/python3.11/dist-packages (from requests) (2.3.0)\n",
+            "Requirement already satisfied: certifi>=2017.4.17 in /usr/local/lib/python3.11/dist-packages (from requests) (2025.1.31)\n",
+            "Requirement already satisfied: soupsieve>1.2 in /usr/local/lib/python3.11/dist-packages (from beautifulsoup4) (2.6)\n",
+            "Requirement already satisfied: typing-extensions>=4.0.0 in /usr/local/lib/python3.11/dist-packages (from beautifulsoup4) (4.13.1)\n",
+            "Requirement already satisfied: numpy>=1.23.2 in /usr/local/lib/python3.11/dist-packages (from pandas) (2.0.2)\n",
+            "Requirement already satisfied: python-dateutil>=2.8.2 in /usr/local/lib/python3.11/dist-packages (from pandas) (2.8.2)\n",
+            "Requirement already satisfied: pytz>=2020.1 in /usr/local/lib/python3.11/dist-packages (from pandas) (2025.2)\n",
+            "Requirement already satisfied: tzdata>=2022.7 in /usr/local/lib/python3.11/dist-packages (from pandas) (2025.2)\n",
+            "Requirement already satisfied: google-ai-generativelanguage==0.6.15 in /usr/local/lib/python3.11/dist-packages (from google-generativeai) (0.6.15)\n",
+            "Requirement already satisfied: google-api-core in /usr/local/lib/python3.11/dist-packages (from google-generativeai) (2.24.2)\n",
+            "Requirement already satisfied: google-api-python-client in /usr/local/lib/python3.11/dist-packages (from google-generativeai) (2.164.0)\n",
+            "Requirement already satisfied: google-auth>=2.15.0 in /usr/local/lib/python3.11/dist-packages (from google-generativeai) (2.38.0)\n",
+            "Requirement already satisfied: protobuf in /usr/local/lib/python3.11/dist-packages (from google-generativeai) (5.29.4)\n",
+            "Requirement already satisfied: pydantic in /usr/local/lib/python3.11/dist-packages (from google-generativeai) (2.11.2)\n",
+            "Requirement already satisfied: tqdm in /usr/local/lib/python3.11/dist-packages (from google-generativeai) (4.67.1)\n",
+            "Requirement already satisfied: proto-plus<2.0.0dev,>=1.22.3 in /usr/local/lib/python3.11/dist-packages (from google-ai-generativelanguage==0.6.15->google-generativeai) (1.26.1)\n",
+            "Requirement already satisfied: packaging>=14.3 in /usr/local/lib/python3.11/dist-packages (from google-cloud-aiplatform) (24.2)\n",
+            "Requirement already satisfied: google-cloud-bigquery!=3.20.0,<4.0.0,>=1.15.0 in /usr/local/lib/python3.11/dist-packages (from google-cloud-aiplatform) (3.31.0)\n",
+            "Requirement already satisfied: google-cloud-resource-manager<3.0.0,>=1.3.3 in /usr/local/lib/python3.11/dist-packages (from google-cloud-aiplatform) (1.14.2)\n",
+            "Requirement already satisfied: shapely<3.0.0 in /usr/local/lib/python3.11/dist-packages (from google-cloud-aiplatform) (2.1.0)\n",
+            "Requirement already satisfied: docstring-parser<1 in /usr/local/lib/python3.11/dist-packages (from google-cloud-aiplatform) (0.16)\n",
+            "Requirement already satisfied: google-cloud-core<3.0dev,>=2.3.0 in /usr/local/lib/python3.11/dist-packages (from google-cloud-storage) (2.4.3)\n",
+            "Requirement already satisfied: google-resumable-media>=2.7.2 in /usr/local/lib/python3.11/dist-packages (from google-cloud-storage) (2.7.2)\n",
+            "Requirement already satisfied: google-crc32c<2.0dev,>=1.0 in /usr/local/lib/python3.11/dist-packages (from google-cloud-storage) (1.7.1)\n",
+            "Requirement already satisfied: aiohttp!=4.0.0a0,!=4.0.0a1 in /usr/local/lib/python3.11/dist-packages (from gcsfs) (3.11.15)\n",
+            "Requirement already satisfied: decorator>4.1.2 in /usr/local/lib/python3.11/dist-packages (from gcsfs) (4.4.2)\n",
+            "Requirement already satisfied: fsspec==2025.3.2 in /usr/local/lib/python3.11/dist-packages (from gcsfs) (2025.3.2)\n",
+            "Requirement already satisfied: google-auth-oauthlib in /usr/local/lib/python3.11/dist-packages (from gcsfs) (1.2.1)\n",
+            "Requirement already satisfied: aiohappyeyeballs>=2.3.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->gcsfs) (2.6.1)\n",
+            "Requirement already satisfied: aiosignal>=1.1.2 in /usr/local/lib/python3.11/dist-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->gcsfs) (1.3.2)\n",
+            "Requirement already satisfied: attrs>=17.3.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->gcsfs) (25.3.0)\n",
+            "Requirement already satisfied: frozenlist>=1.1.1 in /usr/local/lib/python3.11/dist-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->gcsfs) (1.5.0)\n",
+            "Requirement already satisfied: multidict<7.0,>=4.5 in /usr/local/lib/python3.11/dist-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->gcsfs) (6.2.0)\n",
+            "Requirement already satisfied: propcache>=0.2.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->gcsfs) (0.3.1)\n",
+            "Requirement already satisfied: yarl<2.0,>=1.17.0 in /usr/local/lib/python3.11/dist-packages (from aiohttp!=4.0.0a0,!=4.0.0a1->gcsfs) (1.18.3)\n",
+            "Requirement already satisfied: googleapis-common-protos<2.0.0,>=1.56.2 in /usr/local/lib/python3.11/dist-packages (from google-api-core->google-generativeai) (1.69.2)\n",
+            "Requirement already satisfied: grpcio<2.0dev,>=1.33.2 in /usr/local/lib/python3.11/dist-packages (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.1->google-ai-generativelanguage==0.6.15->google-generativeai) (1.71.0)\n",
+            "Requirement already satisfied: grpcio-status<2.0.dev0,>=1.33.2 in /usr/local/lib/python3.11/dist-packages (from google-api-core[grpc]!=2.0.*,!=2.1.*,!=2.10.*,!=2.2.*,!=2.3.*,!=2.4.*,!=2.5.*,!=2.6.*,!=2.7.*,!=2.8.*,!=2.9.*,<3.0.0dev,>=1.34.1->google-ai-generativelanguage==0.6.15->google-generativeai) (1.71.0)\n",
+            "Requirement already satisfied: cachetools<6.0,>=2.0.0 in /usr/local/lib/python3.11/dist-packages (from google-auth>=2.15.0->google-generativeai) (5.5.2)\n",
+            "Requirement already satisfied: pyasn1-modules>=0.2.1 in /usr/local/lib/python3.11/dist-packages (from google-auth>=2.15.0->google-generativeai) (0.4.2)\n",
+            "Requirement already satisfied: rsa<5,>=3.1.4 in /usr/local/lib/python3.11/dist-packages (from google-auth>=2.15.0->google-generativeai) (4.9)\n",
+            "Requirement already satisfied: grpc-google-iam-v1<1.0.0,>=0.14.0 in /usr/local/lib/python3.11/dist-packages (from google-cloud-resource-manager<3.0.0,>=1.3.3->google-cloud-aiplatform) (0.14.2)\n",
+            "Requirement already satisfied: annotated-types>=0.6.0 in /usr/local/lib/python3.11/dist-packages (from pydantic->google-generativeai) (0.7.0)\n",
+            "Requirement already satisfied: pydantic-core==2.33.1 in /usr/local/lib/python3.11/dist-packages (from pydantic->google-generativeai) (2.33.1)\n",
+            "Requirement already satisfied: typing-inspection>=0.4.0 in /usr/local/lib/python3.11/dist-packages (from pydantic->google-generativeai) (0.4.0)\n",
+            "Requirement already satisfied: six>=1.5 in /usr/local/lib/python3.11/dist-packages (from python-dateutil>=2.8.2->pandas) (1.17.0)\n",
+            "Requirement already satisfied: httplib2<1.dev0,>=0.19.0 in /usr/local/lib/python3.11/dist-packages (from google-api-python-client->google-generativeai) (0.22.0)\n",
+            "Requirement already satisfied: google-auth-httplib2<1.0.0,>=0.2.0 in /usr/local/lib/python3.11/dist-packages (from google-api-python-client->google-generativeai) (0.2.0)\n",
+            "Requirement already satisfied: uritemplate<5,>=3.0.1 in /usr/local/lib/python3.11/dist-packages (from google-api-python-client->google-generativeai) (4.1.1)\n",
+            "Requirement already satisfied: requests-oauthlib>=0.7.0 in /usr/local/lib/python3.11/dist-packages (from google-auth-oauthlib->gcsfs) (2.0.0)\n",
+            "Requirement already satisfied: pyparsing!=3.0.0,!=3.0.1,!=3.0.2,!=3.0.3,<4,>=2.4.2 in /usr/local/lib/python3.11/dist-packages (from httplib2<1.dev0,>=0.19.0->google-api-python-client->google-generativeai) (3.2.3)\n",
+            "Requirement already satisfied: pyasn1<0.7.0,>=0.6.1 in /usr/local/lib/python3.11/dist-packages (from pyasn1-modules>=0.2.1->google-auth>=2.15.0->google-generativeai) (0.6.1)\n",
+            "Requirement already satisfied: oauthlib>=3.0.0 in /usr/local/lib/python3.11/dist-packages (from requests-oauthlib>=0.7.0->google-auth-oauthlib->gcsfs) (3.2.2)\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Scrape Pokemon Data (PokemonDB)"
+      ],
+      "metadata": {
+        "id": "ngFzZunoKVfF"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import requests\n",
+        "from bs4 import BeautifulSoup\n",
+        "import pandas as pd\n",
+        "import time # Import time for potential delays\n",
+        "\n",
+        "url = 'https://pokemondb.net/pokedex/all'\n",
+        "headers = {'User-Agent': 'Mozilla/5.0'}\n",
+        "\n",
+        "response = requests.get(url, headers=headers)\n",
+        "response.raise_for_status()\n",
+        "\n",
+        "soup = BeautifulSoup(response.content, 'html.parser')\n",
+        "pokedex_table = soup.find('table', id='pokedex')\n",
+        "\n",
+        "all_pokemon_data = []\n",
+        "sprites_found_count = 0\n",
+        "\n",
+        "if pokedex_table:\n",
+        "    rows = pokedex_table.find('tbody').find_all('tr')\n",
+        "    for i, row in enumerate(rows):\n",
+        "        cells = row.find_all('td')\n",
+        "        if len(cells) < 10:\n",
+        "             print(f\"Skipping row {i+1}: Expected 10 cells, found {len(cells)}\")\n",
+        "             continue\n",
+        "\n",
+        "        try:\n",
+        "            # --- Sprite Extraction targeting 'icon-pkmn' based on user HTML ---\n",
+        "            sprite_cell = cells[0] # First cell\n",
+        "            # Find the image tag with class 'icon-pkmn' directly within the first cell\n",
+        "            sprite_img_tag = sprite_cell.find('img', class_='icon-pkmn')\n",
+        "\n",
+        "            sprite_url = sprite_img_tag['src'] if sprite_img_tag and sprite_img_tag.has_attr('src') else None\n",
+        "            if sprite_url:\n",
+        "                sprites_found_count += 1\n",
+        "            # --- Sprite Extraction END ---\n",
+        "\n",
+        "            pokemon_id_span = cells[0].find('span', class_='infocard-cell-data')\n",
+        "            pokemon_id = pokemon_id_span.text.strip() if pokemon_id_span else None # Handle if ID span missing\n",
+        "\n",
+        "            name_link = cells[1].find('a', class_='ent-name')\n",
+        "            name = name_link.text.strip() if name_link else None # Handle if name link missing\n",
+        "\n",
+        "            types = [a.text for a in cells[2].find_all('a', class_='type-icon')]\n",
+        "\n",
+        "            # Ensure all stat cells are extracted safely\n",
+        "            total = int(cells[3].text.strip()) if cells[3].text.strip().isdigit() else 0\n",
+        "            hp = int(cells[4].text.strip()) if cells[4].text.strip().isdigit() else 0\n",
+        "            attack = int(cells[5].text.strip()) if cells[5].text.strip().isdigit() else 0\n",
+        "            defense = int(cells[6].text.strip()) if cells[6].text.strip().isdigit() else 0\n",
+        "            sp_atk = int(cells[7].text.strip()) if cells[7].text.strip().isdigit() else 0\n",
+        "            sp_def = int(cells[8].text.strip()) if cells[8].text.strip().isdigit() else 0\n",
+        "            speed = int(cells[9].text.strip()) if cells[9].text.strip().isdigit() else 0\n",
+        "\n",
+        "            # Only append if essential data like name is present\n",
+        "            if name and pokemon_id:\n",
+        "                pokemon_entry = {\n",
+        "                    'id': pokemon_id,\n",
+        "                    'name': name,\n",
+        "                    'sprite_url': sprite_url,\n",
+        "                    'types': types,\n",
+        "                    'total_stats': total,\n",
+        "                    'hp': hp,\n",
+        "                    'attack': attack,\n",
+        "                    'defense': defense,\n",
+        "                    'sp_atk': sp_atk,\n",
+        "                    'sp_def': sp_def,\n",
+        "                    'speed': speed\n",
+        "                }\n",
+        "                all_pokemon_data.append(pokemon_entry)\n",
+        "            else:\n",
+        "                 print(f\"Skipping row {i+1}: Missing essential data (Name or ID).\")\n",
+        "\n",
+        "\n",
+        "        except Exception as e:\n",
+        "            current_name = name if 'name' in locals() and name else f\"Unknown (Row {i+1})\"\n",
+        "            print(f\"Error processing row for '{current_name}': {e}\")\n",
+        "\n",
+        "        # Optional delay to be polite to the server\n",
+        "        # time.sleep(0.05)\n",
+        "\n",
+        "print(f\"\\n--- Scraping Complete ---\")\n",
+        "print(f\"Processed {len(rows)} rows.\")\n",
+        "print(f\"Successfully extracted data for {len(all_pokemon_data)} Pokémon entries.\")\n",
+        "print(f\"Found {sprites_found_count} sprite URLs.\")\n",
+        "\n",
+        "# --- Optional: Save to DataFrame/File ---\n",
+        "if all_pokemon_data:\n",
+        "    df = pd.DataFrame(all_pokemon_data)\n",
+        "\n",
+        "    # --- Example: Display first few entries with sprite URLs to verify ---\n",
+        "    print(\"\\n--- Sample Data with Sprite URLs ---\")\n",
+        "    print(df[['id', 'name', 'sprite_url']].head(10))\n",
+        "\n",
+        "    # --- Check for missing sprites ---\n",
+        "    missing_sprites = df[df['sprite_url'].isnull()]\n",
+        "    if not missing_sprites.empty:\n",
+        "        print(f\"\\nWarning: Could not find sprites for {len(missing_sprites)} Pokémon:\")\n",
+        "        print(missing_sprites[['id', 'name']].head()) # Show first few missing ones\n",
+        "    else:\n",
+        "        print(\"\\nSuccessfully found sprite URLs for all extracted Pokémon.\")\n",
+        "\n",
+        "    # Save the results\n",
+        "    # df.to_csv('pokemon_stats_with_sprites.csv', index=False)\n",
+        "    # print(\"\\nData saved to pokemon_stats_with_sprites.csv\")\n",
+        "else:\n",
+        "    print(\"\\nNo data extracted, DataFrame not created.\")"
+      ],
+      "metadata": {
+        "id": "zQcGG86mKHdd",
+        "outputId": "696f3d99-5025-4cf5-9803-5f6be2379c18",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        }
+      },
+      "execution_count": 33,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "\n",
+            "--- Scraping Complete ---\n",
+            "Processed 1215 rows.\n",
+            "Successfully extracted data for 1215 Pokémon entries.\n",
+            "Found 1215 sprite URLs.\n",
+            "\n",
+            "--- Sample Data with Sprite URLs ---\n",
+            "     id        name                                         sprite_url\n",
+            "0  0001   Bulbasaur  https://img.pokemondb.net/sprites/scarlet-viol...\n",
+            "1  0002     Ivysaur  https://img.pokemondb.net/sprites/scarlet-viol...\n",
+            "2  0003    Venusaur  https://img.pokemondb.net/sprites/scarlet-viol...\n",
+            "3  0003    Venusaur  https://img.pokemondb.net/sprites/scarlet-viol...\n",
+            "4  0004  Charmander  https://img.pokemondb.net/sprites/scarlet-viol...\n",
+            "5  0005  Charmeleon  https://img.pokemondb.net/sprites/scarlet-viol...\n",
+            "6  0006   Charizard  https://img.pokemondb.net/sprites/scarlet-viol...\n",
+            "7  0006   Charizard  https://img.pokemondb.net/sprites/scarlet-viol...\n",
+            "8  0006   Charizard  https://img.pokemondb.net/sprites/scarlet-viol...\n",
+            "9  0007    Squirtle  https://img.pokemondb.net/sprites/scarlet-viol...\n",
+            "\n",
+            "Successfully found sprite URLs for all extracted Pokémon.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Save/Load Scraped Data (Using Pandas)"
+      ],
+      "metadata": {
+        "id": "whnF4VzJKpc1"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "# Assuming all_pokemon_data is the list from the scraper\n",
+        "df = pd.DataFrame(all_pokemon_data)\n",
+        "\n",
+        "# Save to CSV\n",
+        "df.to_csv('pokemon_stats.csv', index=False)"
+      ],
+      "metadata": {
+        "id": "CWjtHhefdWbj"
+      },
+      "execution_count": 22,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Code (Loading)"
+      ],
+      "metadata": {
+        "id": "gWwbCNqERui-"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import pandas as pd\n",
+        "\n",
+        "# Load from CSV (adjust path if needed, e.g., GCS path)\n",
+        "# For GCS: 'gs://your-bucket-name/pokemon_stats.csv'\n",
+        "df_pokemon = pd.read_csv('pokemon_stats.csv')\n",
+        "\n",
+        "# Or load from JSON\n",
+        "# df_pokemon = pd.read_json('pokemon_stats.json', orient='records')\n",
+        "\n",
+        "print(f\"Loaded data for {len(df_pokemon)} Pokémon.\")\n",
+        "# print(df_pokemon.head())"
+      ],
+      "metadata": {
+        "id": "Fgs2UxLnRyvm",
+        "outputId": "6f23dcb4-add6-4610-95a6-4d19cdbc8b8a",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        }
+      },
+      "execution_count": 24,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Loaded data for 1215 Pokémon.\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        " Creates a Python dictionary holding the different AI persona definitions, including their specific instructional prompts."
+      ],
+      "metadata": {
+        "id": "EXpYxzw9LW1U"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "personas = {\n",
+        "    \"Professor Oak\": {\n",
+        "        \"prompt\": \"You are Professor Oak, a knowledgeable and encouraging Pokémon Professor. Based on the following data, provide a brief, informative description focusing on the Pokémon's potential and characteristics useful for a new trainer. Maintain a kind and slightly formal tone.\",\n",
+        "    },\n",
+        "    \"Grumpy Gym Leader\": {\n",
+        "        \"prompt\": \"You are a tough, grumpy Gym Leader who has seen it all. Based on the following data, give a short, critical assessment of the Pokémon. Point out its weaknesses or mediocre stats, maybe grudgingly admitting one strength if unavoidable. Use a gruff, dismissive tone.\",\n",
+        "    },\n",
+        "     \"Nurse Joy\": {\n",
+        "        \"prompt\": \"You are Nurse Joy, kind and caring, working at the Pokémon Center. Based on the following data, provide a gentle description focusing on the Pokémon's health (HP) and well-being. Offer a brief care tip or observation. Maintain a soothing and helpful tone.\",\n",
+        "     }\n",
+        "    # Add more personas as desired\n",
+        "}"
+      ],
+      "metadata": {
+        "id": "1SGJGt70RT4m"
+      },
+      "execution_count": 25,
+      "outputs": []
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Assemble Prompt for LLM\n"
+      ],
+      "metadata": {
+        "id": "_0GlQQdASYCO"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "# Assume df_pokemon is the loaded DataFrame\n",
+        "selected_pokemon_name = \"Pikachu\" # Example input\n",
+        "selected_persona_name = \"Professor Oak\" # Example input\n",
+        "\n",
+        "# Find the Pokémon data (using Pandas)\n",
+        "pokemon_data = df_pokemon[df_pokemon['name'].str.lower() == selected_pokemon_name.lower()].iloc[0]\n",
+        "\n",
+        "# Get the persona prompt\n",
+        "persona_prompt = personas[selected_persona_name][\"prompt\"]\n",
+        "\n",
+        "# Format the Pokémon info clearly\n",
+        "pokemon_info_str = f\"Pokémon: {pokemon_data['name']}\\nTypes: {', '.join(eval(pokemon_data['types']) if isinstance(pokemon_data['types'], str) else pokemon_data['types'])}\\nHP: {pokemon_data['hp']}\\nAttack: {pokemon_data['attack']}\\nDefense: {pokemon_data['defense']}\\nSp. Atk: {pokemon_data['sp_atk']}\\nSp. Def: {pokemon_data['sp_def']}\\nSpeed: {pokemon_data['speed']}\"\n",
+        "# Note: eval() used here assumes types are stored as string representations of lists in CSV. Adjust if needed.\n",
+        "\n",
+        "# Combine into the final prompt\n",
+        "final_prompt = f\"{persona_prompt}\\n\\nDATA:\\n{pokemon_info_str}\\n\\nYOUR DESCRIPTION:\"\n",
+        "\n",
+        "print(final_prompt) # Good for debugging"
+      ],
+      "metadata": {
+        "id": "wr2Inqq9Sf4u",
+        "outputId": "41ba9e93-a19b-441f-f776-40d00552b9ba",
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        }
+      },
+      "execution_count": 26,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "You are Professor Oak, a knowledgeable and encouraging Pokémon Professor. Based on the following data, provide a brief, informative description focusing on the Pokémon's potential and characteristics useful for a new trainer. Maintain a kind and slightly formal tone.\n",
+            "\n",
+            "DATA:\n",
+            "Pokémon: Pikachu\n",
+            "Types: Electric\n",
+            "HP: 35\n",
+            "Attack: 55\n",
+            "Defense: 40\n",
+            "Sp. Atk: 50\n",
+            "Sp. Def: 50\n",
+            "Speed: 90\n",
+            "\n",
+            "YOUR DESCRIPTION:\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "Call Gemini API (Option A: Colab/General Python using google-generativeai)"
+      ],
+      "metadata": {
+        "id": "n9UeV1AWTgVE"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "import google.generativeai as genai\n",
+        "import os\n",
+        "\n",
+        "# --- Get API Key (Replace with your key or use environment variables/secrets) ---\n",
+        "# from google.colab import userdata # Example for Colab secrets\n",
+        "# GOOGLE_API_KEY = userdata.get('GOOGLE_API_KEY')\n",
+        "GOOGLE_API_KEY = \"AIzaSyDaECZOOvpo61QDnsJAS7bl_2XvEGLcShc\" # <-- Replace with your key\n",
+        "genai.configure(api_key=GOOGLE_API_KEY)\n",
+        "# --------------------------------------------------------------------------\n",
+        "\n",
+        "# Select the model\n",
+        "model = genai.GenerativeModel('models/gemini-2.0-flash') # Or other compatible models\n",
+        "\n",
+        "# Assume final_prompt is the assembled prompt string from step 5\n",
+        "response = model.generate_content(final_prompt)\n",
+        "\n",
+        "print(f\"--- {selected_persona_name} on {selected_pokemon_name} ---\")\n",
+        "print(response.text)"
+      ],
+      "metadata": {
+        "id": "aqItsrYhSsx9",
+        "outputId": "65928f43-22c9-4464-ee4a-54f3f6540455",
+        "colab": {
+          "base_uri": "https://localhost:8080/",
+          "height": 89
+        }
+      },
+      "execution_count": 30,
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "--- Professor Oak on Pikachu ---\n",
+            "Ah, Pikachu! A fine choice for a budding Pokémon trainer. This Electric-type Pokémon is known for its remarkable Speed, allowing it to often strike first in battle. While Pikachu's base stats may seem modest initially, its potential is undeniable. With careful training, you can develop its offensive capabilities and harness the raw power of electricity. Be mindful of its vulnerabilities, but with dedication and strategic thinking, Pikachu can become a steadfast and reliable partner on your Pokémon journey. Remember to treat it with kindness and respect, and you'll find that Pikachu's loyalty is as electrifying as its attacks!\n",
+            "\n"
+          ]
+        }
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "source": [],
+      "metadata": {
+        "id": "eq4GtBj3ff0s"
+      }
+    },
+    {
+      "cell_type": "markdown",
+      "source": [
+        "HTML Structure (index.html)\n",
+        "This structure includes placeholders (elements with IDs) that we'll update using JavaScript later."
+      ],
+      "metadata": {
+        "id": "Wns31LIsoXCJ"
+      }
+    },
+    {
+      "cell_type": "code",
+      "source": [
+        "<!DOCTYPE html>\n",
+        "<html lang=\"en\">\n",
+        "<head>\n",
+        "    <meta charset=\"UTF-8\">\n",
+        "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n",
+        "    <title>Pokémon Persona Card</title>\n",
+        "    <link rel=\"stylesheet\" href=\"style.css\">\n",
+        "    <!-- Optional: Link Google Fonts here if you find a good one -->\n",
+        "    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">\n",
+        "    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>\n",
+        "    <link href=\"https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Press+Start+2P&display=swap\" rel=\"stylesheet\">\n",
+        "\n",
+        "</head>\n",
+        "<body>\n",
+        "\n",
+        "    <!-- Placeholder for Controls (Add later) -->\n",
+        "    <!-- <div class=\"controls\">\n",
+        "        <select id=\"pokemonSelect\"></select>\n",
+        "        <select id=\"personaSelect\"></select>\n",
+        "        <button id=\"generateButton\">Generate</button>\n",
+        "    </div> -->\n",
+        "\n",
+        "    <div id=\"cardContainer\" class=\"card-container\">\n",
+        "        <!-- The Pokémon Card -->\n",
+        "        <div id=\"pokemonCard\" class=\"pokemon-card\"> <!-- Dynamic type class added here -->\n",
+        "\n",
+        "            <!-- Header: Name, HP, Types -->\n",
+        "            <div class=\"card-header\">\n",
+        "                <h2 id=\"pokemonName\" class=\"pokemon-name\">Pokémon Name</h2>\n",
+        "                <div class=\"header-right\">\n",
+        "                    <span id=\"pokemonHP\" class=\"hp-value\">HP ???</span>\n",
+        "                    <div id=\"pokemonTypes\" class=\"type-icons\">\n",
+        "                        <!-- <img src=\"path/to/type/icon.png\" alt=\"Type\"> -->\n",
+        "                    </div>\n",
+        "                </div>\n",
+        "            </div>\n",
+        "\n",
+        "            <!-- Image: Sprite -->\n",
+        "            <div class=\"card-image-container\">\n",
+        "                <img id=\"pokemonImage\" src=\"placeholder_sprite.png\" alt=\"Pokémon Sprite\" class=\"pokemon-sprite\">\n",
+        "            </div>\n",
+        "\n",
+        "            <!-- Stats Section -->\n",
+        "            <div class=\"card-stats\">\n",
+        "                <div class=\"stat-row\">\n",
+        "                    <span class=\"stat-label\">Attack:</span>\n",
+        "                    <span class=\"stat-value\" id=\"statAttack\">??</span>\n",
+        "                </div>\n",
+        "                <div class=\"stat-row\">\n",
+        "                    <span class=\"stat-label\">Defense:</span>\n",
+        "                    <span class=\"stat-value\" id=\"statDefense\">??</span>\n",
+        "                </div>\n",
+        "                 <div class=\"stat-row\">\n",
+        "                    <span class=\"stat-label\">Sp. Atk:</span>\n",
+        "                    <span class=\"stat-value\" id=\"statSpAtk\">??</span>\n",
+        "                </div>\n",
+        "                <div class=\"stat-row\">\n",
+        "                    <span class=\"stat-label\">Sp. Def:</span>\n",
+        "                    <span class=\"stat-value\" id=\"statSpDef\">??</span>\n",
+        "                </div>\n",
+        "                <div class=\"stat-row\">\n",
+        "                    <span class=\"stat-label\">Speed:</span>\n",
+        "                    <span class=\"stat-value\" id=\"statSpeed\">??</span>\n",
+        "                </div>\n",
+        "                 <div class=\"stat-row total-stat\">\n",
+        "                    <span class=\"stat-label\">Total:</span>\n",
+        "                    <span class=\"stat-value\" id=\"statTotal\">??</span>\n",
+        "                </div>\n",
+        "            </div>\n",
+        "\n",
+        "            <!-- Description: Persona Text -->\n",
+        "            <div class=\"card-description\">\n",
+        "                <h4 id=\"personaName\" class=\"persona-label\">Persona Says:</h4>\n",
+        "                <p id=\"personaText\" class=\"persona-text\">\n",
+        "                    Select a Pokémon and Persona to see the description here...\n",
+        "                </p>\n",
+        "            </div>\n",
+        "\n",
+        "        </div> <!-- End pokemon-card -->\n",
+        "    </div> <!-- End card-container -->\n",
+        "\n",
+        "    <!-- Link to JavaScript file (Add later) -->\n",
+        "    <!-- <script src=\"data_loader.js\"></script> -->\n",
+        "    <!-- <script src=\"script.js\"></script> -->\n",
+        "\n",
+        "</body>\n",
+        "</html>"
+      ],
+      "metadata": {
+        "id": "PWs115hcob84"
+      },
+      "execution_count": null,
+      "outputs": []
+    }
+  ],
+  "metadata": {
+    "colab": {
+      "name": "Get_started.ipynb",
+      "toc_visible": true,
+      "provenance": [],
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "display_name": "Python 3",
+      "name": "python3"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 0
+}
